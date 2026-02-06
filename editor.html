@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>محرر الشهادات المتقدم</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Mammoth: convert .docx to text in-browser -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.16/mammoth.browser.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:'Cairo',sans-serif;
+  background: radial-gradient(1200px 800px at 20% 10%, #fff8e1 0%, #f6fbff 40%, #eef6ff 100%);
+  display:flex;
+  min-height:100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:420px;
+  background:#fff;
+  padding:30px;
+  overflow-y:auto;
+  height:100vh;
+  box-shadow:2px 0 12px rgba(0,0,0,0.15);
+  order:2;
+}
+
+.sidebar::-webkit-scrollbar{width:8px}
+.sidebar::-webkit-scrollbar-track{background:#f1f1f1}
+.sidebar::-webkit-scrollbar-thumb{background:#bbb;border-radius:4px}
+
+.sidebar-header{
+  font-size:1.4rem;
+  font-weight:700;
+  color:#0b5ba6;
+  margin-bottom:30px;
+  padding-bottom:15px;
+  border-bottom:3px solid #0b5ba6;
+}
+
+.section{
+  margin-bottom:30px;
+  padding-bottom:20px;
+  border-bottom:1px solid #eee;
+}
+
+.section:last-child{
+  border-bottom:none;
+}
+
+.section-title{
+  font-size:1.05rem;
+  font-weight:700;
+  color:#0b5ba6;
+  margin-bottom:15px;
+  background:#f8f9fa;
+  padding:12px;
+  border-radius:6px;
+  border-right:4px solid #0b5ba6;
+}
+
+.form-group{
+  margin-bottom:15px;
+}
+
+.form-group label{
+  display:block;
+  font-weight:600;
+  color:#333;
+  margin-bottom:7px;
+  font-size:0.95rem;
+}
+
+.form-group input{
+  width:100%;
+  padding:11px;
+  border:2px solid #ddd;
+  border-radius:6px;
+  font-family:'Cairo',sans-serif;
+  font-size:0.95rem;
+  transition:all 0.3s;
+}
+
+.form-group input:focus{
+  outline:none;
+  border-color:#0b5ba6;
+  background:#fffacd;
+  box-shadow:0 0 5px rgba(11,91,166,0.3);
+}
+
+.grade-row{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr 60px;
+  gap:10px;
+  align-items:center;
+  padding:12px;
+  background:#f9f9f9;
+  border-radius:6px;
+  margin-bottom:10px;
+  border-left:3px solid #0b5ba6;
+}
+
+.grade-row label{
+  font-weight:600;
+  font-size:0.90rem;
+  color:#0b5ba6;
+  margin:0;
+}
+
+.grade-row input{
+  width:100%;
+  padding:8px;
+  border:1px solid #ddd;
+  text-align:center;
+  margin:0;
+  font-size:0.9rem;
+}
+
+.grade-row input:focus{
+  border-color:#0b5ba6;
+  background:#fffacd;
+}
+
+.buttons-group{
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  flex:1;
+  min-width:90px;
+  padding:12px;
+  border:none;
+  border-radius:6px;
+  font-weight:600;
+  cursor:pointer;
+  font-family:'Cairo',sans-serif;
+  font-size:0.95rem;
+  transition:all 0.3s;
+}
+
+.btn:active{
+  transform:scale(0.98);
+}
+
+.btn-primary{
+  background:#27ae60;
+  color:#fff;
+}
+.btn-primary:hover{
+  background:#229954;
+  box-shadow:0 4px 12px rgba(39,174,96,0.4);
+}
+
+.btn-secondary{
+  background:#0b5ba6;
+  color:#fff;
+}
+.btn-secondary:hover{
+  background:#0a4682;
+  box-shadow:0 4px 12px rgba(11,91,166,0.4);
+}
+
+.btn-pdf{
+  background:#0b2a4a;
+  color:#fff;
+}
+.btn-pdf:hover{
+  background:#0a1f35;
+}
+
+.btn-png{
+  background:#cc9900;
+  color:#fff;
+}
+.btn-png:hover{
+  background:#b38700;
+}
+
+.btn-lang{
+  background:#9b59b6;
+  color:#fff;
+}
+.btn-lang:hover{
+  background:#8e44ad;
+}
+
+.message{
+  padding:12px;
+  border-radius:6px;
+  margin-bottom:15px;
+  font-weight:600;
+  display:none;
+}
+
+.message.show{
+  display:block;
+  animation:slideDown 0.3s ease;
+}
+
+@keyframes slideDown{
+  from{transform:translateY(-10px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+
+.message.success{
+  background:#d4edda;
+  color:#155724;
+  border:1px solid #c3e6cb;
+}
+
+.message.error{
+  background:#f8d7da;
+  color:#721c24;
+  border:1px solid #f5c6cb;
+}
+
+.message.info{
+  background:#d1ecf1;
+  color:#0c5460;
+  border:1px solid #bee5eb;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content{
+  flex:1;
+  padding:30px;
+  order:1;
+  overflow-y:auto;
+  height:100vh;
+}
+
+.main-content::-webkit-scrollbar{width:8px}
+.main-content::-webkit-scrollbar-track{background:#f1f1f1}
+.main-content::-webkit-scrollbar-thumb{background:#bbb;border-radius:4px}
+
+/* ===== الشهادة ===== */
+.certificate{
+  max-width:900px;
+  position:relative;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.98)),
+    repeating-linear-gradient(45deg, rgba(33,150,243,0.06) 0 6px, rgba(255,193,7,0.06) 6px 12px);
+  box-shadow:0 16px 45px rgba(0,0,0,.22);
+  padding:46px 46px 40px 46px;
+  margin-bottom:30px;
+  border: 16px solid;
+  border-image: linear-gradient(135deg, #0b5ba6 0%, #35b6ff 25%, #f7c43a 50%, #35b6ff 75%, #0b5ba6 100%) 1;
+  background-clip: padding-box;
+  border-radius: 14px;
+}
+.certificate::before{
+  content:'';
+  position:absolute;
+  inset:-18px;
+  border-radius:18px;
+  padding:10px;
+  background:
+    repeating-linear-gradient(45deg, #0b5ba6 0 6px, #35b6ff 6px 12px),
+    repeating-linear-gradient(-45deg, #d70303 0 6px, #ffffff 6px 12px);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity:0.85;
+  pointer-events:none;
+  z-index:0;
+}
+.certificate::after{
+  content:'';
+  position:absolute;
+  inset:-6px;
+  border-radius:16px;
+  border:2px dashed rgba(11,91,166,0.6);
+  pointer-events:none;
+  z-index:0;
+}
+.certificate > *{
+  position:relative;
+  z-index:1;
+}
+
+.bubble{position:absolute;border-radius:50%;opacity:.7;filter:blur(.4px)}
+.bubble.b1{width:140px;height:140px;left:10px;top:10px;background:radial-gradient(circle at 30% 30%, #ffe0b2, #ffb74d);opacity:.7}
+.bubble.b2{width:110px;height:110px;right:10px;top:22px;background:radial-gradient(circle at 30% 30%, #cfe9ff, #90caf9);opacity:.7}
+
+/* Fun stickers */
+.sticker{
+  position:absolute;
+  width:74px;
+  height:74px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:34px;
+  box-shadow:0 8px 18px rgba(0,0,0,0.18);
+  border:3px solid #fff;
+}
+.sticker.star{left:-18px;bottom:70px;background:radial-gradient(circle at 30% 30%, #fff3b0, #ffd54f)}
+.sticker.balloon{right:-18px;bottom:70px;background:radial-gradient(circle at 30% 30%, #ffccd5, #ff8fa3)}
+
+.header{
+  text-align:center;
+  padding:18px 0 26px 0;
+  border-bottom:3px dashed #f1b000;
+  margin-bottom:25px;
+  position:relative;
+}
+
+.header h1{
+  font-size:2.15rem;
+  color:#0b5ba6;
+  margin-bottom:8px;
+  font-weight:700;
+  /* Avoid breaking Arabic shaping in canvas exports */
+}
+
+.header p{
+  color:#1a7ac2;
+  font-weight:600;
+  font-size:0.95rem;
+}
+
+/* Apply letter spacing only for LTR to avoid Arabic text fragmentation */
+html[dir="ltr"] .header h1{
+  letter-spacing:0.5px;
+}
+
+html[dir="rtl"] .header h1,
+html[dir="rtl"] .header p{
+  direction: rtl;
+  unicode-bidi: plaintext;
+  letter-spacing: 0;
+}
+.header::after{
+  content:'';
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:-12px;
+  width:120px;
+  height:6px;
+  border-radius:999px;
+  background:linear-gradient(90deg, #ffb300, #4fc3f7, #ffb300);
+  box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+.content{
+  padding:20px 0;
+}
+
+.info-row{
+  display:flex;
+  gap:15px;
+  margin:12px 0;
+  font-size:0.95rem;
+  padding:8px 0;
+}
+
+.label{
+  font-weight:700;
+  min-width:120px;
+  color:#0b5ba6;
+  flex-shrink:0;
+}
+
+.value{
+  flex:1;
+  border-bottom:2px solid #999;
+  padding:5px 8px;
+  min-height:22px;
+  color:#333;
+}
+
+table{
+  width:100%;
+  margin:25px 0;
+  border-collapse:collapse;
+  background:#ffffff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+
+th,td{
+  border:1px solid #0b5ba6;
+  padding:12px 8px;
+  text-align:center;
+  font-size:0.92rem;
+}
+
+th{
+  background:linear-gradient(90deg, #0b5ba6, #2196F3);
+  color:#fff;
+  font-weight:700;
+}
+
+td.subject{
+  text-align:right;
+  font-weight:600;
+  background:linear-gradient(90deg, #fff8e1, #ffffff);
+}
+
+.total-row td{
+  font-weight:700;
+  background:#e3f2fd;
+  color:#0b5ba6;
+}
+
+.result{
+  text-align:center;
+  font-size:1.4rem;
+  font-weight:700;
+  margin:25px 0;
+  padding:15px;
+  color:#fff;
+  background:linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+  border-radius:8px;
+  box-shadow:0 10px 22px rgba(0,0,0,0.18);
+}
+
+.signature{
+  position:relative;
+  text-align:center;
+  margin-top:35px;
+  padding-top:25px;
+  border-top:2px dashed #0b5ba6;
+}
+
+.sig-line{
+  width:220px;
+  height:2px;
+  background:#0b5ba6;
+  margin:15px auto 8px;
+}
+
+.signature div{
+  color:#0b5ba6;
+  font-weight:700;
+  margin:5px 0;
+  font-size:0.95rem;
+}
+
+/* ===== Export Buttons ===== */
+.buttons-export{
+  display:flex;
+  gap:10px;
+  margin-top:25px;
+  flex-wrap:wrap;
+}
+
+.buttons-export .btn{
+  padding: 12px 24px;
+  /* Removed invalid 'py' property if present */
+}
+
+/* ===== Responsive ===== */
+@media(max-width:1400px){
+  .sidebar{
+    width:350px;
+  }
+}
+
+@media(max-width:1100px){
+  body{
+    flex-direction:column;
+  }
+  
+  .sidebar{
+    width:100%;
+    height:auto;
+    order:1;
+    border-bottom:2px solid #eee;
+    border-right:none;
+  }
+  
+  .main-content{
+    order:2;
+    height:auto;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== SIDEBAR - لوحة التحرير ===== -->
+<div class="sidebar">
+  <div class="sidebar-header">⚙️ لوحة التحكم</div>
+  
+  <div id="msgBox" class="message"></div>
+
+  <!-- بيانات الطالب -->
+  <div class="section">
+    <div class="section-title" id="sec1Title">👤 بيانات الطالب</div>
+    
+    <div class="form-group">
+      <label id="lbl0" for="registrationNumber">رقم القيد:</label>
+      <input type="text" id="registrationNumber" placeholder="أدخل رقم القيد">
+    </div>
+    
+    <div class="form-group">
+      <label id="lbl1" for="studentName">اسم الطالب:</label>
+      <input type="text" id="studentName" placeholder="أدخل اسم الطالب">
+    </div>
+    
+    <div class="form-group">
+      <label id="lbl2" for="studentCategory">الفئة:</label>
+      <input type="text" id="studentCategory" placeholder="مثال: الصغرى">
+    </div>
+    
+    <div class="form-group">
+      <label id="lbl3" for="studentCenter">المركز:</label>
+      <input type="text" id="studentCenter" placeholder="مثال: الأول">
+    </div>
+  </div>
+
+  <!-- الدرجات -->
+  <div class="section">
+    <div class="section-title" id="sec2Title">📊 الدرجات</div>
+    
+    <!-- قسم رفع الملف -->
+    <div class="form-group" style="margin-bottom: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px; border: 2px dashed #3498db;">
+      <label style="font-weight: 700; color: #2c3e50; margin-bottom: 10px; display: block;">
+        📄 رفع ملف درجات (Excel/CSV)
+      </label>
+      <input type="file" id="gradesFile" accept=".xlsx,.xls,.csv,.docx,.doc,.txt,.rtf" style="margin-bottom: 10px;">
+      <button type="button" onclick="uploadGradesFile()" style="background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+        ⬆️ رفع الملف
+      </button>
+      <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+        ℹ️ الملف يجب أن يحتوي على أسماء المواد والدرجات (الشهر 1 والشهر 2)
+      </p>
+    </div>
+    
+    <div id="gradesContainer"></div>
+  </div>
+
+  <!-- الحضور والغياب -->
+  <div class="section">
+    <div class="section-title" id="sec3Title">📅 الحضور والغياب</div>
+    
+    <div class="form-group">
+      <label id="lbl4" for="attendance">أيام الحضور:</label>
+      <input type="number" id="attendance" placeholder="أدخل أيام الحضور" min="0" max="365">
+    </div>
+    
+    <div class="form-group">
+      <label id="lbl5" for="absence">أيام الغياب:</label>
+      <input type="number" id="absence" placeholder="أدخل أيام الغياب" min="0" max="365">
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title" id="sec4Title">✍️ التوقيع</div>
+    <div class="form-group">
+      <label id="lbl6" for="sigName">اسم المدير:</label>
+      <input type="text" id="sigName" placeholder="أدخل اسم المدير">
+    </div>
+  </div>
+
+  <!-- أزرار التصدير -->
+  <div class="section">
+    <div class="section-title" id="sec5Title">📥 تصدير الشهادة</div>
+    
+    <div class="buttons-group">
+      <button class="btn btn-pdf" onclick="exportPDF()">📄 PDF</button>
+      <button class="btn btn-png" onclick="exportPNG()">🖼️ صورة</button>
+    </div>
+    
+    <div class="buttons-group">
+      <button class="btn btn-lang" id="langBtn" onclick="toggleLanguage()">🌐 تبديل اللغة</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveCertificate()">💾 حفظ</button>
+    </div>
+    
+    <div class="buttons-group">
+      <button class="btn btn-secondary" id="downloadBtn" onclick="downloadSavedImage()" style="display:none;">⬇️ تحميل الصورة المحفوظة</button>
+    </div>
+    
+    <div class="buttons-group">
+      <button class="btn btn-secondary" id="backBtn" onclick="goBack()">⬅️ رجوع</button>
+    </div>
+  </div>
+
+  <!-- إضافة طالب واحد -->
+  <div class="section">
+    <div class="section-title">➕ إضافة طالب</div>
+    <div class="buttons-group">
+      <button class="btn btn-primary" onclick="addStudent()">➕ إضافة طالب واحد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN CONTENT - معاينة الشهادة ===== -->
+<div class="main-content">
+  <div class="certificate" id="cert">
+    <span class="bubble b1" aria-hidden="true"></span>
+    <span class="bubble b2" aria-hidden="true"></span>
+    <span class="sticker star" aria-hidden="true">⭐</span>
+    <span class="sticker balloon" aria-hidden="true">🎈</span>
+
+    <div class="header">
+      <h1 id="title">مركز شروق عدن للتدريب والتأهيل</h1>
+      <p id="subtitle">تحت إشراف وزارة التربية والتعليم</p>
+    </div>
+
+    <div class="content">
+      <div class="info-row">
+        <span class="label" id="lblRegNum">رقم القيد:</span>
+        <span class="value" id="displayRegNum">-</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label" id="lblStudent">اسم الطالب:</span>
+        <span class="value" id="displayName">-</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label" id="lblCat">الفئة:</span>
+        <span class="value" id="displayCategory">-</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label" id="lblCenter">المركز:</span>
+        <span class="value" id="displayCenter">-</span>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th id="thSub">المادة</th>
+            <th id="th1">فصل أول</th>
+            <th id="th2">فصل ثاني</th>
+            <th id="thT">المجموع</th>
+          </tr>
+        </thead>
+        <tbody id="gradesDisplay"></tbody>
+      </table>
+
+      <!-- صفوف الحضور والغياب -->
+      <table style="margin-top:20px;background:#f9f9f9;">
+        <tr>
+          <td style="border:1px solid #0b5ba6;padding:12px;text-align:right;font-weight:700;color:#0b5ba6;background:#e3f2fd;">أيام الحضور</td>
+          <td style="border:1px solid #0b5ba6;padding:12px;text-align:center;font-weight:700;background:#f5f5f5;" id="displayAttendance">-</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #0b5ba6;padding:12px;text-align:right;font-weight:700;color:#0b5ba6;background:#e3f2fd;">أيام الغياب</td>
+          <td style="border:1px solid #0b5ba6;padding:12px;text-align:center;font-weight:700;background:#f5f5f5;" id="displayAbsence">-</td>
+        </tr>
+      </table>
+
+      <div class="result">
+        <span id="lblResult">التقدير:</span>
+        <span id="gradeText">ممتاز</span>
+      </div>
+
+      <div class="signature">
+        <div id="lblMgr">مديرة المركز</div>
+        <div class="sig-line"></div>
+        <div id="displaySigName">-</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let lang = "ar";
+const subjectsAr = ['القرآن', 'الإسلامية', 'العربي', 'الرياضيات', 'العلوم', 'الإنجليزي', 'النورانيه'];
+const subjectsEn = ['Quran', 'Islamic Studies', 'Arabic', 'Mathematics', 'Science', 'English', 'Nuraniyah'];
+
+const defaultGrades = [
+  {subject: 'القرآن', first: 50, second: 50},
+  {subject: 'الإسلامية', first: 50, second: 50},
+  {subject: 'العربي', first: 50, second: 50},
+  {subject: 'الرياضيات', first: 50, second: 50},
+  {subject: 'العلوم', first: 50, second: 50},
+  {subject: 'الإنجليزي', first: 50, second: 50},
+  {subject: 'النورانيه', first: 50, second: 50}
+];
+
+let currentData = {
+  registrationNumber: '',
+  studentName: '',
+  studentCategory: '',
+  studentCenter: '',
+  sigName: 'شروق احمد ياسن',
+  attendance: 0,
+  absence: 0,
+  grades: JSON.parse(JSON.stringify(defaultGrades))
+};
+
+window.addEventListener('load', initializeEditor);
+
+// تنظيف localStorage من البيانات الضخمة
+function cleanupStorageOnInit(){
+  try {
+    const stored = localStorage.getItem('certificates');
+    if(stored) {
+      let certs = JSON.parse(stored);
+      let needsCleanup = false;
+      
+      // تنظيف الصور والبيانات الكبيرة
+      certs = certs.map(c => {
+        const cleaned = {...c};
+        if(cleaned.image) {
+          delete cleaned.image;
+          needsCleanup = true;
+        }
+        return cleaned;
+      });
+      
+      // إذا كانت البيانات ضخمة جداً، احتفظ بآخر 5 فقط
+      if(JSON.stringify(certs).length > 500000) { // > 500KB
+        certs = certs.slice(-5);
+        needsCleanup = true;
+      }
+      
+      if(needsCleanup) {
+        localStorage.setItem('certificates', JSON.stringify(certs));
+      }
+    }
+  } catch(error) {
+    console.log('تنظيف البيانات:', error.message);
+  }
+}
+
+function initializeEditor(){
+  // تنظيف البيانات الضخمة أولاً
+  cleanupStorageOnInit();
+  
+  // قراءة معرف الشهادة من URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const certId = urlParams.get('certId');
+  
+  // إذا كان هناك معرف، حمل البيانات من localStorage
+  if(certId !== null){
+    const certs = JSON.parse(localStorage.getItem('certificates') || '[]');
+    const foundCert = certs.find(c => c.id === certId);
+    if(foundCert){
+      currentData = JSON.parse(JSON.stringify(foundCert));
+      localStorage.setItem('currentCertId', certId);
+      
+      // تأكد من أن البيانات لديها grades array
+      if(!currentData.grades || !Array.isArray(currentData.grades) || currentData.grades.length === 0){
+        currentData.grades = JSON.parse(JSON.stringify(defaultGrades));
+      }
+    }
+  }
+  
+  // تحميل البيانات من localStorage إن وجدت (للشهادات المحفوظة محلياً)
+  const certData = localStorage.getItem('currentCertData');
+  if(certData && !certId){
+    const loadedData = JSON.parse(certData);
+    currentData = loadedData;
+    
+    // تأكد من أن البيانات لديها grades array
+    if(!currentData.grades || !Array.isArray(currentData.grades) || currentData.grades.length === 0){
+      currentData.grades = JSON.parse(JSON.stringify(defaultGrades));
+    }
+  }
+  
+  // ملء حقول الإدخال
+  document.getElementById('registrationNumber').value = currentData.registrationNumber;
+  document.getElementById('studentName').value = currentData.studentName;
+  document.getElementById('studentCategory').value = currentData.studentCategory;
+  document.getElementById('studentCenter').value = currentData.studentCenter;
+  document.getElementById('sigName').value = currentData.sigName;
+  document.getElementById('attendance').value = currentData.attendance || 0;
+  document.getElementById('absence').value = currentData.absence || 0;
+  
+  updatePlaceholders();
+  renderGradesInputs();
+  updateDisplay();
+  attachInputListeners();
+  
+  // زر التحميل متاح دائماً (يحول الشهادة الحالية)
+  document.getElementById('downloadBtn').style.display = 'inline-flex';
+}
+
+function renderGradesInputs(){
+  const container = document.getElementById('gradesContainer');
+  container.innerHTML = currentData.grades.map((g, i) => {
+    const subjectName = g.subject || (lang === 'ar' ? subjectsAr[i] : subjectsEn[i]);
+    return `
+      <div class="grade-row">
+        <label>${subjectName}</label>
+        <input type="number" class="grade-first" data-idx="${i}" value="${g.first}" min="0">
+        <input type="number" class="grade-second" data-idx="${i}" value="${g.second}" min="0">
+        <button onclick="deleteGrade(${i})" style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">❌</button>
+      </div>
+    `;
+  }).join('');
+  
+  // زر إضافة مادة جديدة
+  container.innerHTML += `
+    <div style="margin-top: 15px; display: flex; gap: 10px;">
+      <input type="text" id="newSubjectName" placeholder="اسم المادة الجديدة" style="flex: 1; padding: 10px; border: 2px solid #3498db; border-radius: 6px; font-family: 'Cairo', sans-serif;">
+      <button onclick="addNewGrade()" style="background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">➕ إضافة</button>
+    </div>
+  `;
+}
+
+function attachInputListeners(){
+  document.getElementById('registrationNumber').addEventListener('input', () => {
+    currentData.registrationNumber = document.getElementById('registrationNumber').value;
+    updateDisplay();
+  });
+
+  document.getElementById('studentName').addEventListener('input', () => {
+    currentData.studentName = document.getElementById('studentName').value;
+    updateDisplay();
+  });
+
+  document.getElementById('studentCategory').addEventListener('input', () => {
+    currentData.studentCategory = document.getElementById('studentCategory').value;
+    updateDisplay();
+  });
+
+  document.getElementById('studentCenter').addEventListener('input', () => {
+    currentData.studentCenter = document.getElementById('studentCenter').value;
+    updateDisplay();
+  });
+
+  document.getElementById('sigName').addEventListener('input', () => {
+    currentData.sigName = document.getElementById('sigName').value;
+    updateDisplay();
+  });
+
+  document.getElementById('attendance').addEventListener('input', () => {
+    currentData.attendance = parseInt(document.getElementById('attendance').value) || 0;
+    updateDisplay();
+  });
+
+  document.getElementById('absence').addEventListener('input', () => {
+    currentData.absence = parseInt(document.getElementById('absence').value) || 0;
+    updateDisplay();
+  });
+  
+  attachGradeInputListeners();
+}
+
+function attachGradeInputListeners(){
+  document.querySelectorAll('.grade-first, .grade-second').forEach(input => {
+    input.addEventListener('input', () => {
+      const idx = input.dataset.idx;
+      const allFirst = document.querySelectorAll('.grade-first');
+      const allSecond = document.querySelectorAll('.grade-second');
+      
+      const f = Math.max(0, parseInt(allFirst[idx].value) || 0);
+      const s = Math.max(0, parseInt(allSecond[idx].value) || 0);
+      
+      allFirst[idx].value = f;
+      allSecond[idx].value = s;
+      
+      currentData.grades[idx].first = f;
+      currentData.grades[idx].second = s;
+      
+      updateDisplay();
+    });
+  });
+}
+
+function addNewGrade(){
+  const input = document.getElementById('newSubjectName');
+  const subjectName = input.value.trim();
+  
+  if(!subjectName){
+    showMsg('⚠️ الرجاء إدخال اسم المادة', 'error');
+    return;
+  }
+  
+  if(currentData.grades.length >= 15){
+    showMsg('⚠️ الحد الأقصى للمواد 15', 'error');
+    return;
+  }
+  
+  // إضافة مادة جديدة
+  currentData.grades.push({ 
+    subject: subjectName,
+    first: 0, 
+    second: 0 
+  });
+  
+  // تحديث المواد الافتراضية
+  if(currentData.grades.length > subjectsAr.length){
+    while(subjectsAr.length < currentData.grades.length){
+      subjectsAr.push(`مادة ${subjectsAr.length + 1}`);
+      subjectsEn.push(`Subject ${subjectsEn.length + 1}`);
+    }
+  }
+  
+  input.value = '';
+  renderGradesInputs();
+  attachGradeInputListeners();
+  updateDisplay();
+  showMsg(`✅ تم إضافة مادة: ${subjectName}`, 'success');
+}
+
+function deleteGrade(index){
+  if(currentData.grades.length <= 1){
+    showMsg('⚠️ يجب أن يكون هناك مادة واحدة على الأقل', 'error');
+    return;
+  }
+  
+  if(confirm(`هل تريد حذف المادة: ${subjectsAr[index]}؟`)){
+    currentData.grades.splice(index, 1);
+    renderGradesInputs();
+    attachGradeInputListeners();
+    updateDisplay();
+    showMsg('✅ تم حذف المادة', 'success');
+  }
+}
+
+function loadFromInputs(){
+  const regNum = document.getElementById('registrationNumber').value.trim();
+  const name = document.getElementById('studentName').value.trim();
+  const category = document.getElementById('studentCategory').value.trim();
+  const center = document.getElementById('studentCenter').value.trim();
+  const sig = document.getElementById('sigName').value.trim();
+  
+  if(regNum) currentData.registrationNumber = regNum;
+  if(name) currentData.studentName = name;
+  if(category) currentData.studentCategory = category;
+  if(center) currentData.studentCenter = center;
+  if(sig) currentData.sigName = sig;
+  
+  currentData.attendance = parseInt(document.getElementById('attendance').value) || 0;
+  currentData.absence = parseInt(document.getElementById('absence').value) || 0;
+}
+
+function updateDisplay(){
+  document.getElementById('displayRegNum').textContent = currentData.registrationNumber || '-';
+  document.getElementById('displayName').textContent = currentData.studentName;
+  document.getElementById('displayCategory').textContent = currentData.studentCategory;
+  document.getElementById('displayCenter').textContent = currentData.studentCenter;
+  document.getElementById('displaySigName').textContent = currentData.sigName;
+  document.getElementById('displayAttendance').textContent = currentData.attendance || 0;
+  document.getElementById('displayAbsence').textContent = currentData.absence || 0;
+  
+  // تحديث جدول الدرجات مع أسماء المواد حسب اللغة
+  const tbody = document.getElementById('gradesDisplay');
+  let total = 0;
+  
+  tbody.innerHTML = currentData.grades.map((g, i) => {
+    const subjectName = g.subject || (lang === 'ar' ? subjectsAr[i] : subjectsEn[i]);
+    const t = (g.first || 0) + (g.second || 0);
+    total += t;
+    return `
+      <tr>
+        <td class="subject">${subjectName}</td>
+        <td>${g.first || 0}</td>
+        <td>${g.second || 0}</td>
+        <td>${t}</td>
+      </tr>
+    `;
+  }).join('');
+  
+  // حساب المعدل كنسبة مئوية من الحد الأقصى (700 = 7 مواد × 100)
+  const maxTotal = currentData.grades.length * 100; // الحد الأقصى = عدد المواد × 100
+  const avg = Math.round((total / maxTotal) * 100);
+  
+  const avgLbl = lang === 'ar' ? 'المعدل' : 'Average';
+  const sumLbl = lang === 'ar' ? 'المجموع' : 'Grand Total';
+  
+  tbody.innerHTML += `
+    <tr class="total-row">
+      <td colspan="3" id="lblAvg">${avgLbl}</td>
+      <td id="avg">${avg}%</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="3" id="lblSum">${sumLbl}</td>
+      <td id="grandTotal">${total} / ${maxTotal}</td>
+    </tr>
+  `;
+  
+  // تحديث التقدير بناءً على النسبة المئوية
+  let gradeAr, gradeEn;
+  if(avg >= 95){
+    gradeAr = 'ممتاز';
+    gradeEn = 'Excellent';
+  } else if(avg >= 85){
+    gradeAr = 'جيد جداً';
+    gradeEn = 'Very Good';
+  } else if(avg >= 75){
+    gradeAr = 'جيد';
+    gradeEn = 'Good';
+  } else {
+    gradeAr = 'مقبول';
+    gradeEn = 'Satisfactory';
+  }
+  
+  document.getElementById('gradeText').textContent = lang === 'ar' ? gradeAr : gradeEn;
+}
+
+function saveCertificate(){
+  loadFromInputs();
+  
+  // التحقق من البيانات المطلوبة
+  if(!currentData.registrationNumber || !currentData.studentName){
+    showMsg('❌ الرجاء إدخال رقم القيد واسم الطالب', 'error');
+    return;
+  }
+  
+  showMsg('⏳ جاري حفظ الشهادة...', 'info');
+
+  // تحويل الشهادة إلى صورة Base64
+  return (async () => {
+    const canvas = await captureCertificateCanvas();
+
+    // تحويل الكانفاس إلى Base64 (نحاول ضغط الصورة لتقليل الحجم ودرء خطأ امتلاء localStorage)
+    function compressCanvasToDataUrl(canvas, mimeType = 'image/jpeg'){
+      let quality = 0.8;
+      let dataUrl = canvas.toDataURL(mimeType, quality);
+      // إذا كانت الصورة كبيرة جدًا، قلل الجودة تدريجيًا
+      const maxSize = 250 * 1024; // 250KB
+      while(dataUrl.length > maxSize && quality > 0.35){
+        quality -= 0.15;
+        try {
+          dataUrl = canvas.toDataURL(mimeType, Math.max(0.35, quality));
+        } catch(e){ break; }
+      }
+      return dataUrl;
+    }
+
+    let imageBase64 = null;
+    try {
+      // استخدم JPEG مضغوط لتقليل الحجم
+      imageBase64 = compressCanvasToDataUrl(canvas, 'image/jpeg');
+    } catch(e){
+      console.warn('تعذر ضغط الصورة، استخدام PNG:', e);
+      imageBase64 = canvas.toDataURL('image/png');
+    }
+
+    // إعداد البيانات مع الصورة (تضمين اللغة الحالية)
+    const certDataWithImage = {
+      ...currentData,
+      image: imageBase64,
+      lang: lang || 'ar',
+      savedAt: new Date().toISOString()
+    };
+    
+    // إعداد البيانات بدون الصورة للحفظ المحلي (نسخة بديلة)
+    const certDataWithoutImage = {
+      ...currentData,
+      lang: lang || 'ar',
+      savedAt: new Date().toISOString()
+    };
+    
+    // حفظ في localStorage مع الصورة
+    try {
+      let certs = [];
+      const stored = localStorage.getItem('certificates');
+      if(stored) {
+        try {
+          certs = JSON.parse(stored);
+          // تنظيف الصور من البيانات القديمة
+          certs = certs.map(c => {
+            const cleaned = {...c};
+            delete cleaned.image;
+            return cleaned;
+          });
+        } catch(e) {
+          console.log('خطأ في التحليل، بدء قائمة جديدة');
+          certs = [];
+        }
+      }
+      
+      const certId = localStorage.getItem('currentCertId') || Date.now().toString();
+      
+      // البحث عن الشهادة وتحديثها أو إضافتها
+      const certIndex = certs.findIndex(c => c.id === certId);
+      
+      // احفظ نسخة مع الصورة بشكل منفصل
+      let certsWithImages = [];
+      const storedWithImages = localStorage.getItem('certificates_with_images');
+      if(storedWithImages) {
+        try {
+          certsWithImages = JSON.parse(storedWithImages);
+        } catch(e) {
+          certsWithImages = [];
+        }
+      }
+      
+      const imgCertIndex = certsWithImages.findIndex(c => c.id === certId);
+      if(imgCertIndex !== -1){
+        certsWithImages[imgCertIndex] = certDataWithImage;
+      } else {
+        certDataWithImage.id = certId;
+        certsWithImages.push(certDataWithImage);
+      }
+      
+      // حاول حفظ الصور، لكن إذا امتلأ localStorage فنتجاوز حفظ الصورة محلياً
+      try {
+        localStorage.setItem('certificates_with_images', JSON.stringify(certsWithImages));
+      } catch(imgErr) {
+        console.warn('لا يمكن حفظ الصور محلياً، سيتجاوز التخزين المحلي الصورة:', imgErr);
+        // قم بإزالة خاصية الصورة من الإدخال لتفريغ المساحة
+        try {
+          certsWithImages = certsWithImages.map(c => { const copy = {...c}; delete copy.image; return copy; });
+          localStorage.setItem('certificates_with_images', JSON.stringify(certsWithImages));
+        } catch(e2){
+          // إذا فشل حتى بعد التنظيف، احذف المفتاح بأكمله
+          try { localStorage.removeItem('certificates_with_images'); } catch(e3){}
+        }
+        showMsg('⚠️ مساحة التخزين المحلي ممتلئة، الصورة لم تحفظ محلياً', 'error');
+      }
+      
+      if(certIndex !== -1){
+        certs[certIndex] = certDataWithoutImage;
+      } else {
+        certDataWithoutImage.id = certId;
+        certs.push(certDataWithoutImage);
+      }
+      
+      // إزالة الصور من النسخة الرئيسية
+      const certsClean = certs.map(c => {
+        const cleaned = {...c};
+        delete cleaned.image;
+        return cleaned;
+      });
+      
+      localStorage.setItem('certificates', JSON.stringify(certsClean));
+      localStorage.setItem('currentCertId', certId);
+      localStorage.setItem('currentCertData', JSON.stringify(certDataWithoutImage));
+      
+      console.log('✅ تم حفظ البيانات والصورة في localStorage');
+      console.log('عدد الشهادات:', certsClean.length);
+    } catch (storageError) {
+      console.error('❌ خطأ في localStorage:', storageError.name, storageError.message);
+      
+      // إذا كان localStorage ممتلئاً
+      if(storageError.name === 'QuotaExceededError') {
+        console.log('🗑️ localStorage ممتلئ - محاولة تنظيف...');
+        try {
+          // احذف جميع البيانات القديمة وأبقِ على الأحدث فقط
+          localStorage.removeItem('certificates');
+          localStorage.removeItem('currentCertData');
+          localStorage.removeItem('certificates_with_images');
+          
+          // ثم احفظ البيانات الحالية فقط
+          const freshData = {...certDataWithImage, id: Date.now().toString()};
+          localStorage.setItem('currentCertId', freshData.id);
+          localStorage.setItem('currentCertData', JSON.stringify({...freshData, image: undefined}));
+          
+          // احفظ في array جديد
+          localStorage.setItem('certificates', JSON.stringify([{...freshData, image: undefined}]));
+          localStorage.setItem('certificates_with_images', JSON.stringify([freshData]));
+          
+          showMsg('✅ تم تنظيف الذاكرة وحفظ الشهادة بنجاح', 'success');
+          console.log('✅ تم التنظيف بنجاح');
+          return; // نجح التنظيف والحفظ
+        } catch(cleanError) {
+          console.error('فشل التنظيف:', cleanError);
+          showMsg('⚠️ الذاكرة ممتلئة - سيتم الاعتماد على السيرفر للحفظ', 'success');
+        }
+      } else {
+        showMsg('⚠️ خطأ في الحفظ المحلي: ' + storageError.message, 'error');
+      }
+    }
+    
+    // محاولة الحفظ في السيرفر مع الصورة
+    try {
+      const certId = localStorage.getItem('currentCertId') || Date.now().toString();
+      const response = await fetch('/api/certificates/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          registrationNumber: currentData.registrationNumber,
+          studentName: currentData.studentName,
+          studentCategory: currentData.studentCategory,
+          certification: currentData,
+          image: imageBase64,
+          id: certId
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ تم حفظ في السيرفر:', result);
+        showMsg('✅ تم حفظ الشهادة والصورة بنجاح!', 'success');
+      } else {
+        const errorText = await response.text();
+        console.warn('⚠️ خطأ من السيرفر:', response.status, errorText);
+        showMsg('✅ تم حفظ الشهادة محلياً (السيرفر: ' + response.status + ')', 'success');
+      }
+    } catch (error) {
+      console.log('ℹ️ السيرفر غير متاح:', error.message);
+      showMsg('✅ تم حفظ الشهادة محلياً بنجاح', 'success');
+    }
+  })();
+}
+
+function goBack(){
+  localStorage.removeItem('currentCertId');
+  localStorage.removeItem('currentCertData');
+  window.location.href = 'admin.html';
+}
+
+function downloadSavedImage(){
+  // تحويل الشهادة الحالية إلى صورة وتنزيلها
+  (async () => {
+    const canvas = await captureCertificateCanvas();
+
+    // تنزيل الصورة
+    const link = document.createElement('a');
+    link.download = `${currentData.studentName || 'certificate'}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  })();
+}
+
+async function exportPDF(){
+  showMsg('⏳ جاري إنشاء PDF...', 'info');
+  try {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  } catch(e){}
+
+  if(!window.jspdf || !window.jspdf.jsPDF){
+    showMsg('❌ مكتبة PDF غير محملة بعد، حاول مرة أخرى', 'error');
+    return;
+  }
+
+  const canvas = await captureCertificateCanvas();
+
+  const imgData = canvas.toDataURL('image/jpeg', 0.95);
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p', 'pt', 'a4');
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = pdf.internal.pageSize.getHeight();
+
+  const margin = 20; // pt
+  const imgWidth = pdfWidth - margin * 2;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  if (imgHeight <= pdfHeight - margin * 2) {
+    pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
+  } else {
+    // إذا كانت الصورة أطول من صفحة واحدة، نقسمها إلى صفحات
+    let remainingHeight = canvas.height;
+    let position = 0;
+    const pageCanvasHeight = Math.floor((canvas.width * (pdfHeight - margin * 2)) / imgWidth);
+
+    while (remainingHeight > 0) {
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = Math.min(pageCanvasHeight, remainingHeight);
+      const ctx = pageCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, position, canvas.width, pageCanvas.height, 0, 0, pageCanvas.width, pageCanvas.height);
+      const pageImg = pageCanvas.toDataURL('image/jpeg', 0.95);
+      const pageImgHeight = (pageCanvas.height * imgWidth) / pageCanvas.width;
+      pdf.addImage(pageImg, 'JPEG', margin, margin, imgWidth, pageImgHeight);
+      remainingHeight -= pageCanvas.height;
+      position += pageCanvas.height;
+      if (remainingHeight > 0) pdf.addPage();
+    }
+  }
+
+  const filename = (currentData.studentName ? currentData.studentName.replace(/\s+/g,'_') : 'certificate') + '.pdf';
+  try {
+    const blob = pdf.output('blob');
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch(e) {
+    // Fallback for browsers that do not support blob output
+    pdf.save(filename);
+  }
+  showMsg('✅ تم تنزيل PDF بنجاح', 'success');
+}
+
+function exportPNG(){
+  (async () => {
+    const canvas = await captureCertificateCanvas();
+
+    const link = document.createElement('a');
+    link.download = 'certificate.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  })();
+}
+
+async function captureCertificateCanvas(){
+  try {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  } catch (e) {}
+
+  const orig = document.getElementById('cert');
+  const exportWidth = 900;
+  const clone = orig.cloneNode(true);
+
+  clone.style.position = 'absolute';
+  clone.style.left = '-10000px';
+  clone.style.top = '0';
+  clone.style.width = exportWidth + 'px';
+  clone.style.maxWidth = 'none';
+  clone.style.margin = '0';
+  clone.style.transform = 'none';
+  clone.setAttribute('dir', document.documentElement.dir || 'rtl');
+  clone.setAttribute('lang', document.documentElement.lang || 'ar');
+
+  document.body.appendChild(clone);
+  const exportHeight = Math.ceil(clone.scrollHeight);
+  clone.style.height = exportHeight + 'px';
+
+  const canvas = await html2canvas(clone, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    width: exportWidth,
+    height: exportHeight,
+    windowWidth: exportWidth,
+    windowHeight: exportHeight
+  });
+
+  document.body.removeChild(clone);
+  return canvas;
+}
+
+function toggleLanguage(){
+  lang = lang === 'ar' ? 'en' : 'ar';
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  
+  // تحديث نصوص الجانب الأيسر
+  if(lang === 'ar'){
+    // عنوان Sidebar
+    const sidebarHeader = document.querySelector('.sidebar-header');
+    if(sidebarHeader) sidebarHeader.textContent = '⚙️ لوحة التحكم';
+    
+    // Section titles
+    const sections = {
+      'sec1Title': '👤 بيانات الطالب',
+      'sec2Title': '📊 الدرجات',
+      'sec3Title': '📅 الحضور والغياب',
+      'sec4Title': '✍️ التوقيع',
+      'sec5Title': '📥 تصدير الشهادة'
+    };
+    
+    // Labels
+    const labels = {
+      'lbl0': 'رقم القيد:',
+      'lbl1': 'اسم الطالب:',
+      'lbl2': 'الفئة:',
+      'lbl3': 'المركز:',
+      'lbl4': 'أيام الحضور:',
+      'lbl5': 'أيام الغياب:',
+      'lbl6': 'اسم المدير:'
+    };
+    
+    // Buttons
+    const btns = {
+      'langBtn': '🌐 تبديل اللغة',
+      'saveBtn': '💾 حفظ',
+      'downloadBtn': '⬇️ تحميل الصورة المحفوظة',
+      'backBtn': '⬅️ رجوع'
+    };
+    
+    // Update certificate
+    const certLabels = {
+      'title': 'مركز شروق عدن للتدريب والتأهيل',
+      'subtitle': 'تحت إشراف وزارة التربية والتعليم',
+      'lblRegNum': 'رقم القيد:',
+      'lblStudent': 'اسم الطالب:',
+      'lblCat': 'الفئة:',
+      'lblCenter': 'المركز:',
+      'lblResult': 'التقدير:',
+      'lblMgr': 'مديرة المركز',
+      'thSub': 'المادة',
+      'th1': 'فصل أول',
+      'th2': 'فصل ثاني',
+      'thT': 'المجموع'
+    };
+    
+    Object.entries(sections).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    });
+    
+    Object.entries(labels).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    });
+    
+    Object.entries(btns).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    });
+    
+    Object.entries(certLabels).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    });
+    
+  } else {
+    // English
+    const sections = {
+      'sec1Title': '👤 Student Information',
+      'sec2Title': '📊 Grades',
+      'sec3Title': '📅 Attendance',
+      'sec4Title': '✍️ Signature',
+      'sec5Title': '📥 Export Certificate'
+    };
+    
+    const labels = {
+      'lbl0': 'Registration Number:',
+      'lbl1': 'Student Name:',
+      'lbl2': 'Category:',
+      'lbl3': 'Center:',
+      'lbl4': 'Days Present:',
+      'lbl5': 'Days Absent:',
+      'lbl6': 'Director Name:'
+    };
+    
+    const btns = {
+      'langBtn': '🌐 Toggle Language',
+      'saveBtn': '💾 Save',
+      'downloadBtn': '⬇️ Download Saved Image',
+      'backBtn': '⬅️ Back'
+    };
+    
+    const certLabels = {
+      'title': 'Shorouk Training Center',
+      'subtitle': 'Under supervision of the Ministry of Education',
+      'lblRegNum': 'Registration Number:',
+      'lblStudent': 'Student Name:',
+      'lblCat': 'Category:',
+      'lblCenter': 'Center:',
+      'lblResult': 'Grade:',
+      'lblMgr': 'Center Director',
+      'thSub': 'Subject',
+      'th1': 'First Term',
+      'th2': 'Second Term',
+      'thT': 'Total'
+    };
+    
+    const sidebarHeader = document.querySelector('.sidebar-header');
+    if(sidebarHeader) sidebarHeader.textContent = '⚙️ Control Panel';
+    
+    Object.entries(sections).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    });
+    
+    Object.entries(labels).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    });
+    
+    Object.entries(btns).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    });
+    
+    Object.entries(certLabels).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    });
+  }
+  
+  // تحديث أسماء المواد والـ Placeholders والتقدير
+  updateGradesLabels();
+  updatePlaceholders();
+  updateDisplay();
+}
+
+function showMsg(text, type){
+  const box = document.getElementById('msgBox');
+  box.textContent = text;
+  box.className = 'message ' + type + ' show';
+  setTimeout(() => box.classList.remove('show'), 3000);
+}
+
+function updatePlaceholders(){
+  if(lang === 'ar'){
+    document.getElementById('registrationNumber').placeholder = 'أدخل رقم القيد';
+    document.getElementById('studentName').placeholder = 'أدخل اسم الطالب';
+    document.getElementById('studentCategory').placeholder = 'مثال: الصغرى';
+    document.getElementById('studentCenter').placeholder = 'مثال: الأول';
+    document.getElementById('sigName').placeholder = 'أدخل اسم المدير';
+    document.getElementById('attendance').placeholder = 'أدخل أيام الحضور';
+    document.getElementById('absence').placeholder = 'أدخل أيام الغياب';
+  } else {
+    document.getElementById('registrationNumber').placeholder = 'Enter registration number';
+    document.getElementById('studentName').placeholder = 'Enter student name';
+    document.getElementById('studentCategory').placeholder = 'Example: Group A';
+    document.getElementById('studentCenter').placeholder = 'Example: First';
+    document.getElementById('sigName').placeholder = 'Enter director name';
+    document.getElementById('attendance').placeholder = 'Enter days present';
+    document.getElementById('absence').placeholder = 'Enter days absent';
+  }
+}
+
+function updateGradesLabels(){
+  renderGradesInputs();
+  attachGradeInputListeners();
+}
+
+// إنشاء معرف شهادة عند فتح الصفحة (لتتجنب التكرار)
+document.addEventListener('DOMContentLoaded', function() {
+  // التحقق من وجود معرف شهادة في URL (للتحرير)
+  const urlParams = new URLSearchParams(window.location.search);
+  const certIdFromUrl = urlParams.get('certId');
+  
+  if(certIdFromUrl) {
+    // تحرير شهادة موجودة - استخدم معرفها
+    localStorage.setItem('currentCertId', certIdFromUrl);
+    console.log('✅ تحميل شهادة للتحرير:', certIdFromUrl);
+  } else {
+    // شهادة جديدة - استخدم معرف موجود أو أنشئ واحد جديد (لمرة واحدة فقط)
+    let currentId = localStorage.getItem('currentCertId');
+    let createdTime = localStorage.getItem('currentCertCreatedTime');
+    const now = Date.now();
+    
+    // إذا مضى أكثر من 5 دقائق على المعرف الحالي، أنشئ واحد جديد
+    if(!currentId || !createdTime || (now - parseInt(createdTime)) > 5 * 60 * 1000) {
+      const newCertId = now.toString() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('currentCertId', newCertId);
+      localStorage.setItem('currentCertCreatedTime', now.toString());
+      console.log('✅ معرف شهادة جديدة:', newCertId);
+    } else {
+      console.log('✅ استخدام معرف الشهادة الموجود:', currentId);
+    }
+  }
+});
+
+// ===== دالة رفع وقراءة ملف الدرجات =====
+function uploadGradesFile(){
+  const fileInput = document.getElementById('gradesFile');
+  const file = fileInput.files[0];
+  
+  if(!file) {
+    showMsg('⚠️ الرجاء اختيار ملف أولاً', 'error');
+    return;
+  }
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+
+  // Helper: process plain text content (from .txt/.rtf/.doc)
+  function processTextContent(text){
+    // split into lines and attempt to find lines that contain two numeric values
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+    const grades = [];
+    for(let i=0;i<lines.length && grades.length < 15;i++){
+      const line = lines[i];
+      const nums = line.match(/-?\d+/g);
+      if(nums && nums.length >= 2){
+        const first = parseInt(nums[0]) || 0;
+        const second = parseInt(nums[1]) || 0;
+        // subject name = line without the numbers
+        const subject = line.replace(/-?\d+/g,'').replace(/[,:\-\|]/g,'').trim() || undefined;
+        grades.push({ subject, first, second });
+      } else {
+        // try CSV-style split
+        const parts = line.split(/[,;\t]/).map(p=>p.trim()).filter(p=>p.length);
+        if(parts.length >= 3){
+          const first = parseInt(parts[1]) || 0;
+          const second = parseInt(parts[2]) || 0;
+          const subject = parts[0] || undefined;
+          grades.push({ subject, first, second });
+        }
+      }
+    }
+
+    if(grades.length > 0){
+      // fill missing subjects from defaults if necessary
+      grades.forEach((g, idx) => { if(!g.subject) g.subject = (lang==='ar'?subjectsAr[idx]||('مادة '+(idx+1)):subjectsEn[idx]||('Subject '+(idx+1))); });
+      currentData.grades = grades;
+      renderGradesInputs();
+      attachGradeInputListeners();
+      updateDisplay();
+      showMsg('✅ تم تحميل الدرجات بنجاح! (' + grades.length + ' مادة)', 'success');
+    } else {
+      showMsg('⚠️ لم يتم العثور على بيانات صحيحة في الملف', 'error');
+    }
+  }
+
+  // Branch by extension
+  if(ext === 'xlsx' || ext === 'xls'){
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try{
+        const data = e.target.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+        processGradesData(rows, 'xlsx');
+      } catch(err){
+        console.error('خطأ في قراءة Excel:', err);
+        showMsg('❌ خطأ في قراءة ملف Excel', 'error');
+      }
+    };
+    reader.readAsBinaryString(file);
+    return;
+  }
+
+  if(ext === 'csv'){
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = e.target.result;
+      const rows = data.split('\n').filter(r => r.trim());
+      processGradesData(rows, 'csv');
+    };
+    reader.readAsText(file);
+    return;
+  }
+
+  if(ext === 'docx'){
+    // use mammoth to extract raw text from docx
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const arrayBuffer = e.target.result;
+      try{
+        mammoth.extractRawText({arrayBuffer: arrayBuffer})
+          .then(result => {
+            processTextContent(result.value || '');
+          })
+          .catch(err => {
+            console.error('mammoth error:', err);
+            showMsg('❌ تعذر قراءة ملف .docx. حاول حفظه كـ .docx أو .txt', 'error');
+          });
+      } catch(err){
+        console.error('خطأ mammoth:', err);
+        showMsg('❌ تعذر معالجة الملف', 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    return;
+  }
+
+  if(ext === 'txt' || ext === 'rtf' || ext === 'doc'){
+    // Try reading as text (for .txt/.rtf and attempt .doc as text fallback)
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result || '';
+      processTextContent(text);
+    };
+    reader.readAsText(file);
+    return;
+  }
+
+  showMsg('❌ نوع ملف غير مدعوم. استخدم .xlsx, .csv, .docx أو .txt', 'error');
+}
+
+function processGradesData(data, type){
+  try {
+    let grades = [];
+    const subjectsAr = ['القرآن', 'الإسلامية', 'العربي', 'الرياضيات', 'العلوم', 'الإنجليزي', 'النورانيه'];
+    
+    if(type === 'xlsx') {
+      // معالجة Excel JSON
+      data.forEach((row, index) => {
+        if(index < 7) {
+          // افتراض أن الأعمدة: المادة، الشهر 1، الشهر 2
+          let first = parseInt(row['الشهر الأول'] || row['Month 1'] || row['First'] || 0) || 0;
+          let second = parseInt(row['الشهر الثاني'] || row['Month 2'] || row['Second'] || 0) || 0;
+          
+          // أيضاً نحاول أسماء أخرى
+          if(!first) {
+            const keys = Object.keys(row);
+            if(keys.length >= 2) {
+              first = parseInt(row[keys[1]]) || 0;
+            }
+          }
+          if(!second) {
+            const keys = Object.keys(row);
+            if(keys.length >= 3) {
+              second = parseInt(row[keys[2]]) || 0;
+            }
+          }
+          
+          grades.push({ first, second });
+        }
+      });
+    } else if(type === 'csv') {
+      // معالجة CSV
+      data.forEach((row, index) => {
+        if(index < 7) {
+          const parts = row.split(',').map(p => p.trim());
+          if(parts.length >= 3) {
+            const first = parseInt(parts[1]) || 0;
+            const second = parseInt(parts[2]) || 0;
+            grades.push({ first, second });
+          }
+        }
+      });
+
+      // If parsed grades have no subject names, attach defaults
+      grades.forEach((g, idx) => { if(!g.subject) g.subject = subjectsAr[idx] || ('مادة '+(idx+1)); });
+    }
+    
+    // تحديث البيانات
+    if(grades.length > 0) {
+      currentData.grades = grades;
+      renderGradesInputs();
+      attachGradeInputListeners();
+      updateDisplay();
+      showMsg('✅ تم تحميل الدرجات بنجاح! (' + grades.length + ' مادة)', 'success');
+      console.log('تم تحميل الدرجات:', grades);
+    } else {
+      showMsg('⚠️ لم يتم العثور على بيانات صحيحة في الملف', 'error');
+    }
+  } catch(error) {
+    console.error('خطأ في معالجة البيانات:', error);
+    showMsg('❌ خطأ في معالجة البيانات', 'error');
+  }
+}
+
+// ===== إضافة طالب واحد =====
+async function addStudent(){
+  loadFromInputs();
+  if(!currentData.registrationNumber || !currentData.studentName){
+    showMsg('❌ الرجاء إدخال رقم القيد واسم الطالب قبل الإضافة', 'error');
+    return;
+  }
+
+  // Save current certificate (await save flow)
+  try{
+    await saveCertificate();
+  } catch(e){
+    console.warn('saveCertificate failed or partially failed', e);
+  }
+
+  // After save completes (or attempted), persist metadata entry and reset editor for a new certificate
+  const cert = JSON.parse(JSON.stringify(currentData));
+  cert.id = localStorage.getItem('currentCertId') || (Date.now().toString() + '_' + Math.random().toString(36).substr(2,5));
+  cert.savedAt = new Date().toISOString();
+
+  try{
+    const stored = localStorage.getItem('certificates');
+    const certs = stored ? JSON.parse(stored) : [];
+    const copy = {...cert}; delete copy.image;
+    // replace existing if same id
+    const idx = certs.findIndex(c => c.id === copy.id);
+    if(idx !== -1) certs[idx] = copy; else certs.push(copy);
+    localStorage.setItem('certificates', JSON.stringify(certs));
+  } catch(err){
+    console.error('خطأ في حفظ بيانات الطالب محلياً:', err);
+  }
+
+  // Create new certificate id and clear editor for next entry
+  const now = Date.now();
+  const newId = now.toString() + '_' + Math.random().toString(36).substr(2,9);
+  localStorage.setItem('currentCertId', newId);
+  localStorage.setItem('currentCertCreatedTime', now.toString());
+
+  // Reset currentData to defaults and update UI
+  currentData = {
+    registrationNumber: '',
+    studentName: '',
+    studentCategory: '',
+    studentCenter: '',
+    sigName: '',
+    attendance: 0,
+    absence: 0,
+    grades: JSON.parse(JSON.stringify(defaultGrades))
+  };
+
+  document.getElementById('registrationNumber').value = '';
+  document.getElementById('studentName').value = '';
+  document.getElementById('studentCategory').value = '';
+  document.getElementById('studentCenter').value = '';
+  document.getElementById('sigName').value = '';
+  document.getElementById('attendance').value = 0;
+  document.getElementById('absence').value = 0;
+
+  renderGradesInputs();
+  attachGradeInputListeners();
+  updateDisplay();
+  showMsg('✅ تم الحفظ وفتح محرر جديد', 'success');
+}
+
+</script>
+
+</body>
+</html>

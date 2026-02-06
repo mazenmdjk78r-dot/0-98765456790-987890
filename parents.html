@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>نتائج الطلاب - أولياء الأمور</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:'Cairo',sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container{
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ===== الهيدر ===== */
+.header{
+  background: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.header h1{
+  color: #333;
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.header p{
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.logo{
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+/* ===== منطقة البحث ===== */
+.search-section{
+  background: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.search-group{
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.search-input{
+  flex: 1;
+  min-width: 250px;
+  padding: 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.search-input:focus{
+  outline: none;
+  border-color: #667eea;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+}
+
+.search-btn{
+  padding: 15px 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s;
+  font-family: 'Cairo', sans-serif;
+}
+
+.search-btn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.search-btn:active{
+  transform: translateY(0);
+}
+
+/* ===== الرسائل ===== */
+.message{
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  display: none;
+}
+
+.message.show{
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+
+.message.success{
+  background: #d4edda;
+  color: #155724;
+  border: 2px solid #c3e6cb;
+}
+
+.message.error{
+  background: #f8d7da;
+  color: #721c24;
+  border: 2px solid #f5c6cb;
+}
+
+.message.info{
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 2px solid #bee5eb;
+}
+
+@keyframes slideDown{
+  from{
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to{
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== نتائج البحث ===== */
+.results-container{
+  display: none;
+}
+
+.results-container.show{
+  display: block;
+}
+
+/* ===== الشهادة ===== */
+.certificate-card{
+  background: #fff;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  margin-bottom: 30px;
+}
+
+.certificate-image{
+  width: 100%;
+  max-height: 500px;
+  object-fit: cover;
+  background: #f0f0f0;
+  display: block;
+}
+
+.certificate-info{
+  padding: 30px;
+}
+
+.info-row{
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border-right: 4px solid #667eea;
+}
+
+.info-label{
+  font-weight: 700;
+  color: #333;
+  min-width: 150px;
+  flex-shrink: 0;
+}
+
+.info-value{
+  color: #666;
+  flex: 1;
+}
+
+/* ===== جدول الدرجات ===== */
+.grades-table{
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background: #fff;
+}
+
+.grades-table th{
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  padding: 15px;
+  text-align: right;
+  font-weight: 700;
+}
+
+.grades-table td{
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.grades-table tr:hover{
+  background: #f9f9f9;
+}
+
+.subject-name{
+  text-align: right;
+  font-weight: 600;
+  color: #333;
+}
+
+/* ===== تلوين الدرجات ===== */
+.grade-cell{
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #fff;
+}
+
+.grade-excellent{
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.grade-very-good{
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.grade-good{
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.grade-acceptable{
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.months-container{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.month-card{
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border-top: 4px solid #667eea;
+}
+
+.month-header{
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 15px;
+  text-align: right;
+}
+
+.month-grades{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.month-grade-row{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+
+.month-grade-label{
+  font-weight: 600;
+  color: #555;
+  flex: 1;
+  text-align: right;
+}
+
+.month-grade-value{
+  font-weight: 700;
+  font-size: 1.2rem;
+  min-width: 60px;
+  text-align: center;
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #fff;
+}
+
+/* ===== رسالة التبارك ===== */
+.congratulations{
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  margin: 30px 0;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  animation: pulse 2s infinite;
+}
+
+.congratulations h2{
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.congratulations p{
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+@keyframes pulse{
+  0%, 100%{
+    transform: scale(1);
+  }
+  50%{
+    transform: scale(1.02);
+  }
+}
+
+/* ===== الأزرار ===== */
+.action-buttons{
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.btn{
+  flex: 1;
+  min-width: 150px;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.btn-primary{
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.btn-primary:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary{
+  background: #e0e0e0;
+  color: #333;
+}
+
+.btn-secondary:hover{
+  background: #d0d0d0;
+}
+
+/* ===== الحالات الفارغة ===== */
+.empty-state{
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.empty-state svg{
+  width: 80px;
+  height: 80px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state p{
+  font-size: 1.2rem;
+  color: #666;
+}
+
+/* ===== Responsive ===== */
+@media(max-width: 768px){
+  .header h1{
+    font-size: 1.5rem;
+  }
+  
+  .search-group{
+    flex-direction: column;
+  }
+  
+  .search-input,
+  .search-btn{
+    width: 100%;
+  }
+  
+  .info-row{
+    flex-direction: column;
+  }
+  
+  .congratulations h2{
+    font-size: 1.5rem;
+  }
+  
+  .congratulations p{
+    font-size: 1rem;
+  }
+  
+  .grades-table{
+    font-size: 0.9rem;
+  }
+  
+  .grades-table th,
+  .grades-table td{
+    padding: 10px 8px;
+  }
+}
+
+/* ===== طباعة ===== */
+@media print{
+  body{
+    background: #fff;
+  }
+  
+  .search-section,
+  .action-buttons,
+  .header p{
+    display: none;
+  }
+  
+  .certificate-card{
+    box-shadow: none;
+    border: 2px solid #ddd;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- الهيدر -->
+<div class="header">
+  <div class="logo">🎓</div>
+  <h1>بوابة نتائج الطلاب</h1>
+  <p>مركز شروق عدن للتدريب والتأهيل</p>
+</div>
+
+<!-- منطقة البحث -->
+<div class="container">
+  <div class="search-section">
+    <div class="message" id="msgBox"></div>
+    
+    <div class="search-group">
+      <input 
+        type="text" 
+        class="search-input" 
+        id="searchInput" 
+        placeholder="أدخل رقم القيد..." 
+        onkeypress="if(event.key === 'Enter') searchStudent()"
+      >
+      <button class="search-btn" onclick="searchStudent()">🔍 بحث</button>
+    </div>
+  </div>
+
+  <!-- النتائج -->
+  <div class="results-container" id="resultsContainer">
+    <!-- سيتم ملء هذا القسم عبر JavaScript -->
+  </div>
+
+  <!-- حالة فارغة -->
+  <div class="empty-state" id="emptyState" style="display: none;">
+    <p>🔐 ابدأ البحث عن شهادة الطالب</p>
+  </div>
+</div>
+
+<script>
+function showMsg(text, type){
+  const msgBox = document.getElementById('msgBox');
+  msgBox.textContent = text;
+  msgBox.className = `message show ${type}`;
+  
+  setTimeout(() => {
+    msgBox.classList.remove('show');
+  }, 4000);
+}
+
+async function searchStudent(){
+  const searchTerm = document.getElementById('searchInput').value.trim();
+  
+  if(!searchTerm){
+    showMsg('⚠️ الرجاء إدخال رقم القيد', 'error');
+    return;
+  }
+  
+  showMsg('⏳ جاري البحث...', 'info');
+  
+  try {
+    let results = [];
+    
+    // البحث مباشرة من السيرفر لضمان وجود الصورة
+    try {
+      const response = await fetch(`/api/certificates/search/byRegNumber/${encodeURIComponent(searchTerm)}`);
+      if (response.ok) {
+        const cert = await response.json();
+        results = cert ? [cert] : [];
+      }
+    } catch (serverError) {
+      // إذا فشل السيرفر، استخدم localStorage
+      console.warn('⚠️ استخدام البيانات المحلية...');
+      const certs = JSON.parse(localStorage.getItem('certificates') || '[]');
+      results = certs.filter(cert => 
+        cert.registrationNumber && String(cert.registrationNumber) === searchTerm
+      );
+    }
+    
+    if(results.length === 0){
+      showMsg('❌ لم يتم العثور على أي شهادة برقم القيد هذا', 'error');
+      document.getElementById('resultsContainer').classList.remove('show');
+      document.getElementById('emptyState').style.display = 'block';
+      return;
+    }
+    
+    // عرض النتائج
+    displayResults(results);
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('resultsContainer').classList.add('show');
+    showMsg('✅ تم العثور على الشهادة بنجاح', 'success');
+  } catch (error) {
+    console.error('خطأ في البحث:', error);
+    showMsg('❌ حدث خطأ أثناء البحث عن الشهادة', 'error');
+  }
+}
+
+function displayResults(results){
+  const container = document.getElementById('resultsContainer');
+  
+  container.innerHTML = results.map((cert) => {
+    const lang = cert.lang === 'en' ? 'en' : 'ar';
+    const dir = lang === 'en' ? 'ltr' : 'rtl';
+    const align = lang === 'en' ? 'left' : 'right';
+    const labels = lang === 'en' ? {
+      reg: 'Registration Number:',
+      student: 'Student Name:',
+      cat: 'Category:',
+      center: 'Center:',
+      gradesTitle: '📊 Grades',
+      presence: 'Days Present:',
+      absence: 'Days Absent:',
+      totalLabel: 'Grand Total:',
+      resultLabel: 'Overall Grade',
+      print: '🖨️ Print',
+      download: '⬇️ Download Image'
+    } : {
+      reg: 'رقم القيد:',
+      student: 'اسم الطالب:',
+      cat: 'الفئة:',
+      center: 'المركز:',
+      gradesTitle: '📊 الدرجات',
+      presence: 'أيام الحضور:',
+      absence: 'أيام الغياب:',
+      totalLabel: 'المجموع العام:',
+      resultLabel: 'التقدير العام',
+      print: '🖨️ طباعة',
+      download: '⬇️ تحميل الصورة'
+    };
+
+    return `
+    <div class="certificate-card" data-cert-id="${cert.id}" dir="${dir}" style="text-align:${align}">
+      ${cert.image ? `
+        <img src="${cert.image}" alt="Certificate ${cert.studentName}" class="certificate-image">
+      ` : ''}
+      <div class="certificate-info">
+        <div class="congratulations">
+          <h2>${lang === 'en' ? '🎉 Congratulations' : '🎉 مبارك '}</h2>
+          <p>${lang === 'en' ? 'Success and excellence for' : 'نجاح وتفوق للطالب الكريم'} <strong>${cert.studentName}</strong></p>
+        </div>
+        <h3 style="margin-bottom: 20px; color: #333;">${labels.gradesTitle}</h3>
+        <div class="info-row">
+          <span class="info-label">${labels.reg}</span>
+          <span class="info-value">${cert.registrationNumber}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">${labels.student}</span>
+          <span class="info-value">${cert.studentName}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">${labels.cat}</span>
+          <span class="info-value">${cert.studentCategory}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">${labels.center}</span>
+          <span class="info-value">${cert.studentCenter}</span>
+        </div>
+        <table class="grades-table">
+          <thead>
+            <tr>
+              <th>${lang === 'en' ? 'Subject' : 'المادة'}</th>
+              <th>${lang === 'en' ? 'Month 1' : 'شهر 1'}</th>
+              <th>${lang === 'en' ? 'Month 2' : 'شهر 2'}</th>
+              <th>${lang === 'en' ? 'Grade' : 'التقدير'}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${generateGradesRows(cert.grades, lang)}
+            <tr style="background: #f0f0f0; font-weight: 700;">
+              <td colspan="3" style="text-align: ${align};">${labels.totalLabel}</td>
+              <td>${calculateTotal(cert.grades)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top: 25px;">
+          <h3 style="margin-bottom: 15px; color: #333;">${lang === 'en' ? '📅 Attendance' : '📅 الحضور والغياب'}</h3>
+          <div class="info-row">
+            <span class="info-label">${labels.presence}</span>
+            <span class="info-value">${cert.attendance || 0} ${lang === 'en' ? 'days' : 'يوم'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">${labels.absence}</span>
+            <span class="info-value">${cert.absence || 0} ${lang === 'en' ? 'days' : 'يوم'}</span>
+          </div>
+        </div>
+        <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border-radius: 8px; text-align: center;">
+          <p style="font-size: 0.9rem; margin-bottom: 5px;">${labels.resultLabel}</p>
+          <h2 style="font-size: 2rem; margin: 0;">${getGradeLevel(cert.grades)}</h2>
+        </div>
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="printCertificate()">${labels.print}</button>
+          <button class="btn btn-secondary" onclick="downloadCertificateImage('${cert.id}', '${cert.studentName}')">${labels.download}</button>
+        </div>
+      </div>
+    </div>
+    `;
+  }).join('');
+  
+  showMsg('✅ تم العثور على الشهادة بنجاح', 'success');
+}
+
+function getGradeColor(grade){
+  const gradeValue = parseInt(grade);
+  if(gradeValue >= 90) return 'grade-excellent';
+  if(gradeValue >= 80) return 'grade-very-good';
+  if(gradeValue >= 70) return 'grade-good';
+  return 'grade-acceptable';
+}
+
+function generateGradesRows(grades){
+  const subjectsAr = ['القرآن', 'الإسلامية', 'العربي', 'الرياضيات', 'العلوم', 'الإنجليزي', 'النورانيه'];
+  const subjectsEn = ['Quran', 'Islamic Studies', 'Arabic', 'Mathematics', 'Science', 'English', 'Nuraniyah'];
+  
+  // default to Arabic if lang not provided
+  const lang = arguments.length > 1 ? arguments[1] : 'ar';
+  return grades.map((g, i) => {
+    const name = lang === 'en' ? (subjectsEn[i] || 'Subject') : (subjectsAr[i] || 'مادة');
+    const first = g.first || 0;
+    const second = g.second || 0;
+    const total = first + second;
+    const totalColor = getGradeColor(total);
+    return `
+    <tr>
+      <td class="subject-name">${name}</td>
+      <td>${first}</td>
+      <td>${second}</td>
+      <td><span class="grade-cell ${totalColor}" style="font-weight: 700;">${total}</span></td>
+    </tr>
+  `}).join('');
+}
+
+function calculateTotal(grades){
+  return grades.reduce((sum, g) => sum + (g.first || 0) + (g.second || 0), 0);
+}
+
+function getGradeLevel(grades){
+  const total = calculateTotal(grades);
+  const average = total / (grades.length * 100) * 100;
+  
+  if(average >= 90) return 'ممتاز 🌟';
+  if(average >= 80) return 'جيد جداً ⭐';
+  if(average >= 70) return 'جيد ✓';
+  return 'مقبول';
+}
+
+function printCertificate(){
+  window.print();
+}
+
+async function downloadCertificateImage(certId, studentName){
+  try {
+    console.log('شروع التنزيل للشهادة:', certId);
+    showMsg('⏳ جاري تحضير الصورة...', 'info');
+    
+    // حاول تحميل الصورة مباشرة من السيرفر (يعمل من أي جهاز)
+    try {
+      const resp = await fetch(`/api/certificates/image/${certId}?download=1`);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${studentName || 'certificate'}_${certId}.png`;
+        document.body.appendChild(link);
+        setTimeout(() => {
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          showMsg('✅ تم تنزيل الصورة بنجاح', 'success');
+        }, 100);
+        return;
+      }
+    } catch (serverDownloadError) {
+      console.warn('فشل تنزيل الصورة من السيرفر، سنحاول من المتصفح...', serverDownloadError);
+    }
+
+    // إذا لم توجد صورة مخزنة، حاول التقاط العنصر المعروض وحفظه
+    const certElement = document.querySelector(`[data-cert-id="${certId}"]`);
+    if(!certElement) {
+      showMsg('❌ لا يوجد عنصر شهادة مرئي لالتقاط الصورة', 'error');
+      return;
+    }
+
+    if(typeof html2canvas === 'undefined'){
+      showMsg('⚠️ مكتبة html2canvas غير محمّلة - سيتم فتح المحرر لحفظ الصورة', 'error');
+      return;
+    }
+
+    // التقاط العنصر وتحويله إلى صورة وحفظها
+    html2canvas(certElement, { scale: 2, useCORS: true, backgroundColor: '#ffffff' })
+      .then(canvas => {
+        try {
+          const dataUrl = canvas.toDataURL('image/png');
+          // حفظ الصورة في مخزن الصور
+          let withImages = [];
+          try { withImages = JSON.parse(localStorage.getItem('certificates_with_images') || '[]'); } catch(e){ withImages = []; }
+          const existingIndex = withImages.findIndex(c => c.id === certId);
+          const entry = { image: dataUrl, id: certId };
+          if(existingIndex !== -1) withImages[existingIndex] = entry; else withImages.push(entry);
+          localStorage.setItem('certificates_with_images', JSON.stringify(withImages));
+
+          // ثم تنزيلها مباشرة
+          const link2 = document.createElement('a');
+          link2.href = dataUrl;
+          link2.download = `${studentName || 'certificate'}_${certId}.png`;
+          document.body.appendChild(link2);
+          setTimeout(() => { link2.click(); document.body.removeChild(link2); showMsg('✅ تم التقاط الصورة وحفظها وتنزيلها', 'success'); }, 100);
+        } catch(e){ console.error('فشل حفظ الصورة:', e); showMsg('❌ فشل حفظ الصورة', 'error'); }
+      })
+      .catch(err => { console.error('خطأ في html2canvas:', err); showMsg('❌ فشل التقاط الصورة', 'error'); });
+      
+  } catch (error) {
+    console.error('خطأ في التنزيل:', error);
+    showMsg('❌ حدث خطأ أثناء تنزيل الصورة', 'error');
+  }
+}
+
+// حدث عند تحميل الصفحة
+window.addEventListener('load', () => {
+  document.getElementById('emptyState').style.display = 'block';
+});
+</script>
+
+<!-- مكتبة لتحويل عناصر HTML إلى صور (مطلوبة لالتقاط الشهادة عند عدم وجود صورة محفوظة) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+</body>
+</html>

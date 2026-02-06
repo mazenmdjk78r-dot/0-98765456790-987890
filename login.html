@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>تسجيل دخول المدرسين</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:'Cairo',sans-serif;
+  background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.login-container{
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  padding:50px 40px;
+  width:100%;
+  max-width:400px;
+  text-align:center;
+}
+
+.login-container h1{
+  color:#0b2a4a;
+  font-size:2rem;
+  margin-bottom:15px;
+}
+
+.school-name{
+  color:#666;
+  font-size:1rem;
+  margin-bottom:40px;
+  font-weight:500;
+}
+
+.form-group{
+  margin-bottom:25px;
+  text-align:right;
+}
+
+.form-group label{
+  display:block;
+  color:#0b2a4a;
+  font-weight:600;
+  margin-bottom:8px;
+  font-size:1rem;
+}
+
+.pin-input{
+  width:100%;
+  padding:14px;
+  font-size:1.3rem;
+  letter-spacing:10px;
+  border:2px solid #ddd;
+  border-radius:8px;
+  text-align:center;
+  transition:border-color 0.3s;
+  font-weight:700;
+  font-family:'Arial',monospace;
+}
+
+.pin-input:focus{
+  outline:none;
+  border-color:#667eea;
+  background:#f8f9ff;
+}
+
+.login-btn{
+  width:100%;
+  padding:14px;
+  background:#667eea;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  font-size:1.1rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:background 0.3s;
+  margin-top:10px;
+}
+
+.login-btn:hover{
+  background:#764ba2;
+}
+
+.error-msg{
+  color:#e74c3c;
+  margin-top:15px;
+  font-size:0.95rem;
+  display:none;
+}
+
+.success-msg{
+  color:#27ae60;
+  margin-top:15px;
+  font-size:0.95rem;
+  display:none;
+}
+
+.pin-kbd{
+  margin-top:30px;
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:8px;
+}
+
+.pin-btn{
+  padding:12px;
+  border:2px solid #ddd;
+  background:#f5f5f5;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:700;
+  font-size:1.1rem;
+  transition:all 0.2s;
+}
+
+.pin-btn:hover{
+  background:#667eea;
+  color:#fff;
+  border-color:#667eea;
+}
+
+.clear-btn{
+  background:#e74c3c;
+  color:#fff;
+  border-color:#e74c3c;
+}
+
+.clear-btn:hover{
+  background:#c0392b;
+}
+
+.info-text{
+  color:#999;
+  font-size:0.85rem;
+  margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-container">
+  <h1>مرحباً</h1>
+  <p class="school-name">مركز شروق عدن للتدريب والتأهيل</p>
+  
+  <form onsubmit="handleLogin(event)">
+    <div class="form-group">
+      <label for="pinInput">أدخل رمز المرور:</label>
+      <input 
+        type="password" 
+        id="pinInput" 
+        class="pin-input" 
+        placeholder="••••" 
+        maxlength="4"
+        inputmode="numeric"
+        pattern="\d{4}"
+      >
+    </div>
+    
+    <div class="pin-kbd">
+      <button type="button" class="pin-btn" onclick="addPin('1')">1</button>
+      <button type="button" class="pin-btn" onclick="addPin('2')">2</button>
+      <button type="button" class="pin-btn" onclick="addPin('3')">3</button>
+      <button type="button" class="pin-btn" onclick="addPin('4')">4</button>
+      <button type="button" class="pin-btn" onclick="addPin('5')">5</button>
+      <button type="button" class="pin-btn" onclick="addPin('6')">6</button>
+      <button type="button" class="pin-btn" onclick="addPin('7')">7</button>
+      <button type="button" class="pin-btn" onclick="addPin('8')">8</button>
+      <button type="button" class="pin-btn" onclick="addPin('9')">9</button>
+      <button type="button" class="pin-btn" onclick="addPin('0')">0</button>
+      <button type="button" class="pin-btn clear-btn" onclick="clearPin()" style="grid-column:span 2">مسح</button>
+    </div>
+    
+    <button type="submit" class="login-btn">دخول</button>
+  </form>
+  
+  <div class="error-msg" id="errorMsg"></div>
+  <div class="success-msg" id="successMsg"></div>
+</div>
+
+<script>
+const TEACHER_PIN = "7439"; // الرمز الآمن
+
+function addPin(digit){
+  const input = document.getElementById('pinInput');
+  if(input.value.length < 4){
+    input.value += digit;
+  }
+}
+
+function clearPin(){
+  document.getElementById('pinInput').value = '';
+}
+
+function handleLogin(e){
+  e.preventDefault();
+  const pin = document.getElementById('pinInput').value;
+  const errorMsg = document.getElementById('errorMsg');
+  const successMsg = document.getElementById('successMsg');
+  
+  errorMsg.style.display = 'none';
+  successMsg.style.display = 'none';
+  
+  if(pin.length !== 4){
+    errorMsg.textContent = 'الرمز يجب أن يكون 4 أرقام';
+    errorMsg.style.display = 'block';
+    return;
+  }
+  
+  if(pin === TEACHER_PIN){
+    successMsg.textContent = 'تم التحقق بنجاح! جاري التوجيه...';
+    successMsg.style.display = 'block';
+    localStorage.setItem('teacherLoggedIn', 'true');
+    localStorage.setItem('loginTime', new Date().getTime());
+    setTimeout(() => {
+      window.location.href = 'admin.html';
+    }, 1000);
+  } else {
+    errorMsg.textContent = 'رمز المرور غير صحيح!';
+    errorMsg.style.display = 'block';
+    document.getElementById('pinInput').value = '';
+  }
+}
+
+// التحقق من تسجيل دخول سابق
+window.addEventListener('load', ()=>{
+  if(localStorage.getItem('teacherLoggedIn') === 'true'){
+    const loginTime = parseInt(localStorage.getItem('loginTime') || 0);
+    const now = new Date().getTime();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    
+    if(now - loginTime < twentyFourHours){
+      window.location.href = 'admin.html';
+    } else {
+      localStorage.removeItem('teacherLoggedIn');
+      localStorage.removeItem('loginTime');
+    }
+  }
+});
+</script>
+
+</body>
+</html>
